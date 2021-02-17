@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from "@nestjs/mongoose";
 import { PoolEventsModule } from './pool-events/pool-events.module';
 import {ScheduleModule} from "@nestjs/schedule";
+import {ConfigModule} from "@nestjs/config";
 
 @Module({
     imports: [
@@ -9,6 +10,11 @@ import {ScheduleModule} from "@nestjs/schedule";
             useNewUrlParser: true,
             useCreateIndex: true,
             useFindAndModify: false,
+        }),
+        ConfigModule.forRoot({
+            isGlobal: true,
+            cache: true,
+            expandVariables: true,
         }),
         ScheduleModule.forRoot(),
         PoolEventsModule,
