@@ -7,6 +7,7 @@ import {Web3Service} from "../web3/web3.service";
 import {ConfigService} from "@nestjs/config";
 import {GlobalConfig} from "../config";
 import {PoolEventsConfig} from "./config/pool-events.config";
+import {PoolEventsRepository} from "./pool-events.repository";
 
 @Injectable()
 export class PoolEventsService implements OnModuleInit {
@@ -14,9 +15,7 @@ export class PoolEventsService implements OnModuleInit {
     private FETCH_BLOCK_RANGE;
 
     constructor(
-        @InjectModel(PoolEvent.name)
-        private readonly poolEventModel: Model<PoolEventDocument>,
-
+        private readonly poolEventsRepository: PoolEventsRepository,
         private readonly web3service: Web3Service,
         private readonly configService: ConfigService<GlobalConfig & PoolEventsConfig>,
     ) {}
@@ -53,29 +52,14 @@ export class PoolEventsService implements OnModuleInit {
         return events;
     }
 
-    async storeEvents(events: PoolEvent[]): Promise<number> {
-        const insertionResult = await this.poolEventModel.insertMany(
-            events,
-            {
-                lean: true,
-                rawResult: true
-            }
-        );
-
-        return insertionResult.insertedCount ?? 0;
-    }
-
     async storeNewEvents() {
-        const latestBlock = (await this.poolEventModel
-            .findOne()
-            .sort({blockNumber: -1}))?.blockNumber ?? 0;
-
+        const latestBlock = await this.poolEventsRepository.getLatestBlock();
         const newEvents = await this.fetchNextEvents(latestBlock);
         if(!newEvents.length) {
             console.log(`Creating filler event...`);
             newEvents.push({blockNumber: latestBlock + this.FETCH_BLOCK_RANGE} as any);
         }
-        const insertedCount = await this.storeEvents(newEvents);
+        const insertedCount = await this.poolEventsRepository.storeEvents(newEvents);
 
         console.log(`Successfully inserted ${insertedCount} events.`);
     }

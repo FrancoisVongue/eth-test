@@ -3,6 +3,8 @@ import * as Web3 from "web3"
 import {ConfigService} from "@nestjs/config";
 import {GlobalConfig} from "../config";
 
+export type Web3EventTypes = `allEvents` | 'mint' | 'burn' | 'swap' | 'sync';
+
 @Injectable()
 export class Web3Service {
     private readonly web3;
@@ -19,7 +21,7 @@ export class Web3Service {
 
     async GetContractEvents(
         contract,
-        eventType: `allEvents` | 'mint' | 'burn' | 'swap' | 'sync' = "allEvents",
+        eventType: Web3EventTypes = "allEvents",
         from: number | 'earliest' = 0,
         to: number | 'latest' = 'latest'
     ) {
